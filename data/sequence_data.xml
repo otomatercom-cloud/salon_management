@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_salon_booking" model="ir.sequence">
+        <field name="name">Salon Booking</field>
+        <field name="code">salon.booking</field>
+        <field name="prefix">SAL/%(year)s/</field>
+        <field name="padding">5</field>
+    </record>
+    <record id="seq_salon_payout" model="ir.sequence">
+        <field name="name">Salon Staff Payout</field>
+        <field name="code">salon.staff.payout</field>
+        <field name="prefix">PAY/%(year)s/</field>
+        <field name="padding">4</field>
+    </record>
+</odoo>

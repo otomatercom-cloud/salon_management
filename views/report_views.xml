@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Staff daily work -->
+    <record id="view_salon_staff_daily_list" model="ir.ui.view">
+        <field name="name">salon.staff.daily.report.list</field>
+        <field name="model">salon.staff.daily.report</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="date"/>
+                <field name="employee_id"/>
+                <field name="bookings" sum="Bookings"/>
+                <field name="services_done" sum="Completed"/>
+                <field name="services_cancelled" sum="Cancelled"/>
+                <field name="no_shows" sum="No-shows"/>
+                <field name="revenue" sum="Revenue"/>
+                <field name="commission" sum="Commission"/>
+                <field name="worked_hours" widget="float_time" sum="Hours"/>
+                <field name="revenue_per_hour"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_salon_staff_daily_pivot" model="ir.ui.view">
+        <field name="name">salon.staff.daily.report.pivot</field>
+        <field name="model">salon.staff.daily.report</field>
+        <field name="arch" type="xml">
+            <pivot sample="1">
+                <field name="employee_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="services_done" type="measure"/>
+                <field name="revenue" type="measure"/>
+                <field name="commission" type="measure"/>
+                <field name="worked_hours" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_salon_staff_daily_graph" model="ir.ui.view">
+        <field name="name">salon.staff.daily.report.graph</field>
+        <field name="model">salon.staff.daily.report</field>
+        <field name="arch" type="xml">
+            <graph type="bar" sample="1">
+                <field name="employee_id"/>
+                <field name="revenue" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="view_salon_staff_daily_search" model="ir.ui.view">
+        <field name="name">salon.staff.daily.report.search</field>
+        <field name="model">salon.staff.daily.report</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <filter string="Today" name="today" domain="[('date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Yesterday" name="yesterday" domain="[('date', '=', (context_today() - relativedelta(days=1)).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <group>
+                    <filter string="Staff" name="g_staff" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Day" name="g_day" context="{'group_by': 'date:day'}"/>
+                    <filter string="Month" name="g_month" context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_salon_staff_today" model="ir.actions.act_window">
+        <field name="name">Today's Work</field>
+        <field name="res_model">salon.staff.daily.report</field>
+        <field name="view_mode">list,pivot,graph</field>
+        <field name="context">{'search_default_today': 1}</field>
+        <field name="search_view_id" ref="view_salon_staff_daily_search"/>
+    </record>
+    <record id="action_salon_staff_performance" model="ir.actions.act_window">
+        <field name="name">Staff Performance</field>
+        <field name="res_model">salon.staff.daily.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="context">{'search_default_this_month': 1}</field>
+        <field name="search_view_id" ref="view_salon_staff_daily_search"/>
+    </record>
+
+    <!-- Profitability -->
+    <record id="view_salon_profit_pivot" model="ir.ui.view">
+        <field name="name">salon.profit.report.pivot</field>
+        <field name="model">salon.profit.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Estimated Profitability" sample="1">
+                <field name="date" interval="month" type="row"/>
+                <field name="kind" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_salon_profit_graph" model="ir.ui.view">
+        <field name="name">salon.profit.report.graph</field>
+        <field name="model">salon.profit.report</field>
+        <field name="arch" type="xml">
+            <graph type="bar" stacked="1" sample="1">
+                <field name="date" interval="month"/>
+                <field name="kind"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="view_salon_profit_list" model="ir.ui.view">
+        <field name="name">salon.profit.report.list</field>
+        <field name="model">salon.profit.report</field>
+        <field name="arch" type="xml">
+            <list create="0">
+                <field name="date"/>
+                <field name="kind"/>
+                <field name="category"/>
+                <field name="employee_id" optional="hide"/>
+                <field name="product_id" optional="hide"/>
+                <field name="amount" sum="Estimated profit"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_salon_profit_search" model="ir.ui.view">
+        <field name="name">salon.profit.report.search</field>
+        <field name="model">salon.profit.report</field>
+        <field name="arch" type="xml">
+            <search>
+                <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <group>
+                    <filter string="Type" name="g_kind" context="{'group_by': 'kind'}"/>
+                    <filter string="Month" name="g_month" context="{'group_by': 'date:month'}"/>
+                    <filter string="Staff" name="g_staff" context="{'group_by': 'employee_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="action_salon_profit" model="ir.actions.act_window">
+        <field name="name">Profitability (Estimate)</field>
+        <field name="res_model">salon.profit.report</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="search_view_id" ref="view_salon_profit_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Estimated profit = net service revenue - staff commission - approved expenses.</p>
+            <p>This is a management estimate, not accounting profit (product cost and taxes are excluded).</p>
+        </field>
+    </record>
+
+    <!-- Line based reports -->
+    <record id="action_salon_report_revenue" model="ir.actions.act_window">
+        <field name="name">Revenue</field>
+        <field name="res_model">salon.booking.line</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('state', '=', 'done')]</field>
+        <field name="search_view_id" ref="view_salon_booking_line_search"/>
+        <field name="context">{'search_default_this_month': 1}</field>
+    </record>
+    <record id="action_salon_report_service" model="ir.actions.act_window">
+        <field name="name">Service Performance</field>
+        <field name="res_model">salon.booking.line</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('state', '=', 'done')]</field>
+        <field name="search_view_id" ref="view_salon_booking_line_search"/>
+        <field name="context">{'search_default_this_month': 1, 'search_default_g_service': 1}</field>
+    </record>
+    <record id="action_salon_report_commission" model="ir.actions.act_window">
+        <field name="name">Commission</field>
+        <field name="res_model">salon.booking.line</field>
+        <field name="view_mode">pivot,list,graph</field>
+        <field name="domain">[('state', '=', 'done')]</field>
+        <field name="search_view_id" ref="view_salon_booking_line_search"/>
+        <field name="context">{'search_default_this_month': 1, 'search_default_g_staff': 1}</field>
+    </record>
+</odoo>

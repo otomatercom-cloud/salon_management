@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="salon_management.Dashboard">
+        <div class="o_salon_dashboard p-3 overflow-auto h-100">
+            <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <select class="form-select w-auto" t-on-change="(ev) => this.onFilterChange('period', ev)">
+                    <option value="today" t-att-selected="state.period === 'today'">Today</option>
+                    <option value="yesterday" t-att-selected="state.period === 'yesterday'">Yesterday</option>
+                    <option value="week" t-att-selected="state.period === 'week'">This Week</option>
+                    <option value="month" t-att-selected="state.period === 'month'">This Month</option>
+                    <option value="custom" t-att-selected="state.period === 'custom'">Custom range</option>
+                </select>
+                <t t-if="state.period === 'custom'">
+                    <input type="date" class="form-control w-auto" t-att-value="state.dateFrom" t-on-change="(ev) => this.onFilterChange('dateFrom', ev)"/>
+                    <input type="date" class="form-control w-auto" t-att-value="state.dateTo" t-on-change="(ev) => this.onFilterChange('dateTo', ev)"/>
+                </t>
+                <select class="form-select w-auto" t-on-change="(ev) => this.onFilterChange('employeeId', ev)">
+                    <option value="">All staff</option>
+                    <t t-foreach="state.staff" t-as="s" t-key="s.id">
+                        <option t-att-value="s.id" t-esc="s.name"/>
+                    </t>
+                </select>
+                <select class="form-select w-auto" t-on-change="(ev) => this.onFilterChange('productId', ev)">
+                    <option value="">All services</option>
+                    <t t-foreach="state.services" t-as="p" t-key="p.id">
+                        <option t-att-value="p.id" t-esc="p.display_name"/>
+                    </t>
+                </select>
+                <span class="text-muted ms-auto" t-if="state.data">
+                    <t t-esc="state.data.date_from"/> → <t t-esc="state.data.date_to"/>
+                </span>
+            </div>
+            <t t-if="state.data">
+                <div class="row g-3 mb-4">
+                    <t t-foreach="kpiDefs" t-as="k" t-key="k[0]">
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <div class="card h-100 text-center">
+                                <div class="card-body py-3">
+                                    <div class="fs-4 fw-bold" t-esc="formatKpi(k[0], k[2])"/>
+                                    <div class="text-muted small" t-esc="k[1]"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+                <div class="text-muted small mb-3">
+                    Revenue = net of discounts, before tax, from completed services. Estimated profit = revenue - commission - approved expenses (not accounting profit).
+                </div>
+                <div class="row g-3">
+                    <t t-foreach="chartDefs" t-as="c" t-key="c[0]">
+                        <div class="col-12 col-lg-6">
+                            <div class="card h-100">
+                                <div class="card-header fw-bold" t-esc="c[1]"/>
+                                <div class="card-body">
+                                    <div t-if="!rows(c[0]).length" class="text-muted">No data for this period.</div>
+                                    <div t-foreach="rows(c[0])" t-as="r" t-key="r_index" class="mb-2">
+                                        <div class="d-flex justify-content-between small">
+                                            <span t-esc="r.label"/>
+                                            <span t-esc="(Math.round(r.value * 100) / 100).toLocaleString()"/>
+                                        </div>
+                                        <div class="progress" style="height: 8px;">
+                                            <div class="progress-bar" t-attf-style="width: #{r.pct}%"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </div>
+            </t>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_salon_root" name="Salon Management" sequence="40"
+              web_icon="salon_management,static/description/icon.png"
+              groups="group_salon_staff,group_salon_accountant"/>
+
+    <menuitem id="menu_salon_dashboard" name="Dashboard" parent="menu_salon_root" sequence="1"
+              action="action_salon_dashboard" groups="group_salon_manager,group_salon_accountant"/>
+
+    <menuitem id="menu_salon_operations" name="Operations" parent="menu_salon_root" sequence="10"
+              groups="group_salon_staff"/>
+    <menuitem id="menu_salon_bookings" name="Bookings" parent="menu_salon_operations" sequence="1" action="action_salon_booking"/>
+    <menuitem id="menu_salon_bookings_today" name="Today's Bookings" parent="menu_salon_operations" sequence="2" action="action_salon_booking_today"/>
+    <menuitem id="menu_salon_calendar" name="Calendar" parent="menu_salon_operations" sequence="3" action="action_salon_calendar"/>
+    <menuitem id="menu_salon_checkin" name="Check-In" parent="menu_salon_operations" sequence="4" action="action_salon_check_in"/>
+
+    <menuitem id="menu_salon_customers_root" name="Customers" parent="menu_salon_root" sequence="20" groups="group_salon_receptionist"/>
+    <menuitem id="menu_salon_customers" name="Customers" parent="menu_salon_customers_root" sequence="1" action="action_salon_customers"/>
+
+    <menuitem id="menu_salon_services_root" name="Services" parent="menu_salon_root" sequence="30" groups="group_salon_staff"/>
+    <menuitem id="menu_salon_services" name="Services" parent="menu_salon_services_root" sequence="1" action="action_salon_services"/>
+    <menuitem id="menu_salon_categories" name="Categories" parent="menu_salon_services_root" sequence="2"
+              action="product.product_category_action_form" groups="group_salon_manager"/>
+    <menuitem id="menu_salon_commission_rules" name="Commission Rules" parent="menu_salon_services_root" sequence="3"
+              action="action_salon_commission_rule" groups="group_salon_manager"/>
+
+    <menuitem id="menu_salon_staff_root" name="Staff" parent="menu_salon_root" sequence="40" groups="group_salon_receptionist,group_salon_accountant"/>
+    <menuitem id="menu_salon_staff" name="Staff" parent="menu_salon_staff_root" sequence="1" action="action_salon_staff"/>
+    <menuitem id="menu_salon_staff_today" name="Today's Work" parent="menu_salon_staff_root" sequence="2" action="action_salon_staff_today"/>
+    <menuitem id="menu_salon_staff_performance" name="Performance" parent="menu_salon_staff_root" sequence="3" action="action_salon_staff_performance"/>
+    <menuitem id="menu_salon_staff_commission" name="Commission" parent="menu_salon_staff_root" sequence="4" action="action_salon_report_commission"/>
+
+    <menuitem id="menu_salon_finance" name="Finance" parent="menu_salon_root" sequence="50" groups="group_salon_receptionist,group_salon_accountant"/>
+    <menuitem id="menu_salon_invoices" name="Invoices" parent="menu_salon_finance" sequence="1" action="action_salon_invoices"/>
+    <menuitem id="menu_salon_payments" name="Payments" parent="menu_salon_finance" sequence="2" action="account.action_account_payments"/>
+    <menuitem id="menu_salon_expenses" name="Expenses" parent="menu_salon_finance" sequence="3" action="action_salon_expense"/>
+    <menuitem id="menu_salon_payouts" name="Staff Payouts" parent="menu_salon_finance" sequence="4" action="action_salon_payout"
+              groups="group_salon_manager,group_salon_accountant"/>
+
+    <menuitem id="menu_salon_reports" name="Reports" parent="menu_salon_root" sequence="60" groups="group_salon_manager,group_salon_accountant"/>
+    <menuitem id="menu_salon_report_revenue" name="Revenue" parent="menu_salon_reports" sequence="1" action="action_salon_report_revenue"/>
+    <menuitem id="menu_salon_report_staff" name="Staff Performance" parent="menu_salon_reports" sequence="2" action="action_salon_staff_performance"/>
+    <menuitem id="menu_salon_report_service" name="Service Performance" parent="menu_salon_reports" sequence="3" action="action_salon_report_service"/>
+    <menuitem id="menu_salon_report_commission" name="Commission" parent="menu_salon_reports" sequence="4" action="action_salon_report_commission"/>
+    <menuitem id="menu_salon_report_expenses" name="Expenses" parent="menu_salon_reports" sequence="5" action="action_salon_expense_report"/>
+    <menuitem id="menu_salon_report_profit" name="Profitability" parent="menu_salon_reports" sequence="6" action="action_salon_profit"/>
+
+    <menuitem id="menu_salon_config" name="Configuration" parent="menu_salon_root" sequence="90" groups="group_salon_admin"/>
+    <menuitem id="menu_salon_discount_limits" name="Discount Limits" parent="menu_salon_config" sequence="1" action="action_salon_settings"/>
+</odoo>

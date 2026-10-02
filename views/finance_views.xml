@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Expenses -->
+    <record id="view_salon_expense_list" model="ir.ui.view">
+        <field name="name">salon.expense.list</field>
+        <field name="model">salon.expense</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state == 'cancelled'">
+                <field name="date"/>
+                <field name="name"/>
+                <field name="category"/>
+                <field name="partner_id" optional="show"/>
+                <field name="amount" sum="Total"/>
+                <field name="state" widget="badge" decoration-success="state == 'approved'"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_salon_expense_form" model="ir.ui.view">
+        <field name="name">salon.expense.form</field>
+        <field name="model">salon.expense</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approve" string="Approve" type="object" class="btn-primary"
+                            invisible="state != 'draft'" groups="salon_management.group_salon_manager"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state != 'approved'"
+                            groups="salon_management.group_salon_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,approved"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="category"/>
+                            <field name="amount"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="partner_id"/>
+                            <field name="bill_id"/>
+                            <field name="payout_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="approved_by"/>
+                            <field name="approved_date"/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="view_salon_expense_search" model="ir.ui.view">
+        <field name="name">salon.expense.search</field>
+        <field name="model">salon.expense</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="This Month" name="this_month" domain="[('date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <group>
+                    <filter string="Category" name="g_category" context="{'group_by': 'category'}"/>
+                    <filter string="Month" name="g_month" context="{'group_by': 'date:month'}"/>
+                    <filter string="Status" name="g_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="view_salon_expense_pivot" model="ir.ui.view">
+        <field name="name">salon.expense.pivot</field>
+        <field name="model">salon.expense</field>
+        <field name="arch" type="xml">
+            <pivot sample="1">
+                <field name="category" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+    <record id="view_salon_expense_graph" model="ir.ui.view">
+        <field name="name">salon.expense.graph</field>
+        <field name="model">salon.expense</field>
+        <field name="arch" type="xml">
+            <graph type="pie" sample="1">
+                <field name="category"/>
+                <field name="amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+    <record id="action_salon_expense" model="ir.actions.act_window">
+        <field name="name">Expenses</field>
+        <field name="res_model">salon.expense</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_salon_expense_search"/>
+    </record>
+    <record id="action_salon_expense_report" model="ir.actions.act_window">
+        <field name="name">Expense Report</field>
+        <field name="res_model">salon.expense</field>
+        <field name="view_mode">pivot,graph,list</field>
+        <field name="domain">[('state', '=', 'approved')]</field>
+        <field name="search_view_id" ref="view_salon_expense_search"/>
+    </record>
+
+    <!-- Payouts -->
+    <record id="view_salon_payout_list" model="ir.ui.view">
+        <field name="name">salon.staff.payout.list</field>
+        <field name="model">salon.staff.payout</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="date_from"/>
+                <field name="date_to"/>
+                <field name="commission_total" sum="Commission"/>
+                <field name="net_payable" sum="Net"/>
+                <field name="state" widget="badge" decoration-success="state in ('paid', 'closed')"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+    <record id="view_salon_payout_form" model="ir.ui.view">
+        <field name="name">salon.staff.payout.form</field>
+        <field name="model">salon.staff.payout</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_calculate" string="Calculate" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_approve" string="Approve" type="object" class="btn-primary" invisible="state != 'calculated'"/>
+                    <button name="action_pay" string="Pay" type="object" class="btn-primary" invisible="state != 'approved'"
+                            confirm="Mark this payout as paid? It cannot be paid twice."/>
+                    <button name="action_close" string="Close" type="object" invisible="state != 'paid'"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object" invisible="state not in ('calculated', 'approved')"/>
+                    <button name="action_reverse" string="Reverse Payment" type="object" invisible="state != 'paid'"
+                            groups="salon_management.group_salon_admin" confirm="Reverse this payment for correction?"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,calculated,approved,paid,closed"/>
+                </header>
+                <sheet>
+                    <h1><field name="name"/></h1>
+                    <group>
+                        <group>
+                            <field name="employee_id" readonly="state != 'draft'"/>
+                            <field name="date_from" readonly="state != 'draft'"/>
+                            <field name="date_to" readonly="state != 'draft'"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="commission_total"/>
+                            <field name="base_pay" readonly="state not in ('draft', 'calculated')"/>
+                            <field name="attendance_days"/>
+                            <field name="advance" readonly="state not in ('draft', 'calculated')"/>
+                            <field name="other_deduction" readonly="state not in ('draft', 'calculated')"/>
+                            <field name="net_payable" class="fw-bold"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Commission Lines" name="page_lines">
+                            <field name="line_ids">
+                                <list>
+                                    <field name="booking_id"/>
+                                    <field name="booking_date"/>
+                                    <field name="product_id"/>
+                                    <field name="price_subtotal"/>
+                                    <field name="commission_amount" sum="Total"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Audit" name="page_audit">
+                            <group>
+                                <field name="approved_by"/>
+                                <field name="approved_date"/>
+                                <field name="paid_by"/>
+                                <field name="paid_date"/>
+                                <field name="expense_id"/>
+                            </group>
+                            <field name="notes"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="action_salon_payout" model="ir.actions.act_window">
+        <field name="name">Staff Payouts</field>
+        <field name="res_model">salon.staff.payout</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Invoices linked to bookings (reuse standard views) -->
+    <record id="action_salon_invoices" model="ir.actions.act_window">
+        <field name="name">Salon Invoices</field>
+        <field name="res_model">account.move</field>
+        <field name="domain">[('salon_booking_id', '!=', False)]</field>
+        <field name="context">{'default_move_type': 'out_invoice'}</field>
+        <field name="view_mode">list,form</field>
+    </record>
+    <record id="action_salon_invoices_list" model="ir.actions.act_window.view">
+        <field name="act_window_id" ref="action_salon_invoices"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="account.view_out_invoice_tree"/>
+        <field name="sequence">1</field>
+    </record>
+    <record id="action_salon_invoices_form" model="ir.actions.act_window.view">
+        <field name="act_window_id" ref="action_salon_invoices"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="account.view_move_form"/>
+        <field name="sequence">2</field>
+    </record>
+</odoo>

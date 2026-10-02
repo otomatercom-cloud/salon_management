@@ -1,0 +1,30 @@
+{
+    "name": "Salon Management",
+    "version": "19.0.1.0.0",
+    "summary": "Bookings, staff, commission, payouts, expenses and profitability for salons",
+    "category": "Services",
+    "author": "Otomater",
+    "website": "https://otomater.com",
+    "license": "OPL-1",
+    "depends": ["base", "mail", "hr", "hr_attendance", "product", "account"],
+    "data": [
+        "security/security.xml",
+        "security/ir.model.access.csv",
+        "data/sequence_data.xml",
+        "data/cron_data.xml",
+        "wizard/booking_reason_wizard_views.xml",
+        "views/booking_views.xml",
+        "views/master_views.xml",
+        "views/finance_views.xml",
+        "views/report_views.xml",
+        "views/dashboard_views.xml",
+        "views/menus.xml",
+    ],
+    "assets": {
+        "web.assets_backend": [
+            "salon_management/static/src/dashboard/*",
+        ],
+    },
+    "installable": True,
+    "application": True,
+}

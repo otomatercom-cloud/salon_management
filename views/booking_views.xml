@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_salon_booking_list" model="ir.ui.view">
+        <field name="name">salon.booking.list</field>
+        <field name="model">salon.booking</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state in ('cancelled', 'no_show')" decoration-success="state == 'paid'"
+                  decoration-info="state in ('checked_in', 'in_service')">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="start_datetime"/>
+                <field name="end_datetime" optional="show"/>
+                <field name="employee_ids" widget="many2many_tags" optional="show"/>
+                <field name="amount_untaxed" sum="Total" optional="show"/>
+                <field name="payment_status" widget="badge" optional="show"/>
+                <field name="state" widget="badge" decoration-success="state in ('completed', 'paid', 'closed')"
+                       decoration-danger="state in ('cancelled', 'no_show')" decoration-info="state in ('checked_in', 'in_service')"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_form" model="ir.ui.view">
+        <field name="name">salon.booking.form</field>
+        <field name="model">salon.booking</field>
+        <field name="arch" type="xml">
+            <form string="Booking">
+                <header>
+                    <button name="action_confirm" string="Confirm" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_check_in" string="Check-In" type="object" class="btn-primary" invisible="state != 'confirmed'"/>
+                    <button name="action_start_service" string="Start Service" type="object" class="btn-primary" invisible="state != 'checked_in'"/>
+                    <button name="action_complete" string="Complete" type="object" class="btn-primary" invisible="state != 'in_service'"
+                            groups="salon_management.group_salon_receptionist"/>
+                    <button name="action_create_invoice" string="Create Invoice" type="object" class="btn-primary"
+                            invisible="state != 'completed' or invoice_id" groups="salon_management.group_salon_receptionist"/>
+                    <button name="action_register_payment" string="Register Payment" type="object" class="btn-primary"
+                            invisible="state != 'completed' or not invoice_id or payment_status == 'paid'"
+                            groups="salon_management.group_salon_receptionist"/>
+                    <button name="action_mark_paid" string="Mark Paid" type="object" class="btn-primary"
+                            invisible="state != 'completed' or payment_status != 'paid'" groups="salon_management.group_salon_receptionist"/>
+                    <button name="action_close" string="Close" type="object" invisible="state != 'paid'"
+                            groups="salon_management.group_salon_receptionist"/>
+                    <button name="action_cancel_wizard" string="Cancel" type="object" invisible="state not in ('draft', 'confirmed')"/>
+                    <button name="action_no_show_wizard" string="No Show" type="object" invisible="state != 'confirmed'"
+                            groups="salon_management.group_salon_receptionist"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,checked_in,in_service,completed,paid,closed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id" options="{'no_create_edit': True}" readonly="state != 'draft'"/>
+                            <field name="source"/>
+                            <field name="company_id" groups="base.group_multi_company" readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="start_datetime" readonly="state not in ('draft', 'confirmed')"/>
+                            <field name="end_datetime"/>
+                            <field name="duration" widget="float_time"/>
+                            <field name="booking_date" invisible="1"/>
+                            <field name="invoice_id"/>
+                            <field name="payment_status" widget="badge" invisible="not invoice_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Services" name="page_services">
+                            <field name="line_ids" readonly="state in ('completed', 'paid', 'closed', 'cancelled', 'no_show')">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="product_id" options="{'no_create': True}"/>
+                                    <field name="employee_id" options="{'no_create': True}"/>
+                                    <field name="quantity"/>
+                                    <field name="price_unit"/>
+                                    <field name="discount_type"/>
+                                    <field name="discount_value"/>
+                                    <field name="duration" widget="float_time"/>
+                                    <field name="price_subtotal" sum="Total"/>
+                                    <field name="commission_amount" groups="salon_management.group_salon_receptionist" optional="show"/>
+                                    <field name="line_start" optional="hide"/>
+                                    <field name="state" widget="badge" decoration-success="state == 'done'" decoration-danger="state == 'cancelled'"/>
+                                    <button name="action_done" type="object" string="Done" icon="fa-check"
+                                            invisible="parent.state != 'in_service' or state != 'pending'"/>
+                                    <field name="name" column_invisible="1"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                </list>
+                            </field>
+                            <group class="oe_subtotal_footer">
+                                <field name="amount_gross"/>
+                                <field name="amount_discount"/>
+                                <field name="amount_untaxed" class="oe_subtotal_footer_separator"/>
+                            </group>
+                            <field name="note" placeholder="Notes..."/>
+                        </page>
+                        <page string="Audit" name="page_audit" groups="salon_management.group_salon_receptionist">
+                            <group>
+                                <group>
+                                    <field name="checkin_datetime"/>
+                                    <field name="completed_datetime"/>
+                                    <field name="completed_user_id"/>
+                                    <field name="paid_datetime"/>
+                                    <field name="paid_user_id"/>
+                                </group>
+                                <group>
+                                    <field name="cancel_date"/>
+                                    <field name="cancel_user_id"/>
+                                    <field name="cancel_reason"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_kanban" model="ir.ui.view">
+        <field name="name">salon.booking.kanban</field>
+        <field name="model">salon.booking</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" group_create="0" group_delete="0" group_edit="0">
+                <templates>
+                    <t t-name="card">
+                        <field name="partner_id" class="fw-bold"/>
+                        <div class="text-muted"><field name="name"/> · <field name="start_datetime"/></div>
+                        <div><field name="employee_ids" widget="many2many_tags"/></div>
+                        <field name="amount_untaxed" widget="monetary"/>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_search" model="ir.ui.view">
+        <field name="name">salon.booking.search</field>
+        <field name="model">salon.booking</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="line_ids" string="Staff" filter_domain="[('line_ids.employee_id', 'ilike', self)]"/>
+                <field name="line_ids" string="Service" filter_domain="[('line_ids.product_id', 'ilike', self)]"/>
+                <filter string="Today" name="today" domain="[('booking_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Upcoming" name="upcoming" domain="[('state', 'in', ('draft', 'confirmed')), ('start_datetime', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Confirmed" name="f_confirmed" domain="[('state', '=', 'confirmed')]"/>
+                <filter string="In Progress" name="f_progress" domain="[('state', 'in', ('checked_in', 'in_service'))]"/>
+                <filter string="Completed / Paid" name="f_done" domain="[('state', 'in', ('completed', 'paid', 'closed'))]"/>
+                <filter string="Cancelled / No-show" name="f_cancel" domain="[('state', 'in', ('cancelled', 'no_show'))]"/>
+                <separator/>
+                <filter string="Unpaid" name="unpaid" domain="[('state', '=', 'completed'), ('payment_status', '!=', 'paid')]"/>
+                <group>
+                    <filter string="Customer" name="g_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="State" name="g_state" context="{'group_by': 'state'}"/>
+                    <filter string="Payment Status" name="g_payment" context="{'group_by': 'payment_status'}"/>
+                    <filter string="Date" name="g_date" context="{'group_by': 'booking_date:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- booking lines: calendar (staff schedule), list, search, report views -->
+    <record id="view_salon_booking_line_list" model="ir.ui.view">
+        <field name="name">salon.booking.line.list</field>
+        <field name="model">salon.booking.line</field>
+        <field name="arch" type="xml">
+            <list create="0" edit="0">
+                <field name="booking_id"/>
+                <field name="booking_date"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="employee_id"/>
+                <field name="quantity" sum="Qty"/>
+                <field name="price_subtotal" sum="Revenue"/>
+                <field name="commission_amount" sum="Commission"/>
+                <field name="state" widget="badge"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_line_form" model="ir.ui.view">
+        <field name="name">salon.booking.line.form</field>
+        <field name="model">salon.booking.line</field>
+        <field name="arch" type="xml">
+            <form create="0" edit="0">
+                <group>
+                    <group>
+                        <field name="booking_id"/>
+                        <field name="partner_id"/>
+                        <field name="product_id"/>
+                        <field name="employee_id"/>
+                    </group>
+                    <group>
+                        <field name="line_start"/>
+                        <field name="line_end"/>
+                        <field name="price_subtotal"/>
+                        <field name="state"/>
+                    </group>
+                </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_line_calendar" model="ir.ui.view">
+        <field name="name">salon.booking.line.calendar</field>
+        <field name="model">salon.booking.line</field>
+        <field name="arch" type="xml">
+            <calendar string="Staff Schedule" date_start="line_start" date_stop="line_end" color="employee_id"
+                      mode="week" quick_create="0" event_open_popup="1">
+                <field name="employee_id" filters="1"/>
+                <field name="partner_id"/>
+                <field name="product_id"/>
+                <field name="booking_id"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_line_search" model="ir.ui.view">
+        <field name="name">salon.booking.line.search</field>
+        <field name="model">salon.booking.line</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="booking_id"/>
+                <field name="partner_id"/>
+                <field name="employee_id"/>
+                <field name="product_id"/>
+                <filter string="Today" name="today" domain="[('booking_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Yesterday" name="yesterday" domain="[('booking_date', '=', (context_today() - relativedelta(days=1)).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Week" name="this_week" domain="[('booking_date', '&gt;=', (context_today() - relativedelta(weekday=0, days=6)).strftime('%Y-%m-%d'))]"/>
+                <filter string="This Month" name="this_month" domain="[('booking_date', '&gt;=', context_today().strftime('%Y-%m-01'))]"/>
+                <separator/>
+                <filter string="Done" name="done" domain="[('state', '=', 'done')]"/>
+                <group>
+                    <filter string="Staff" name="g_staff" context="{'group_by': 'employee_id'}"/>
+                    <filter string="Service" name="g_service" context="{'group_by': 'product_id'}"/>
+                    <filter string="Customer" name="g_customer" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Status" name="g_state" context="{'group_by': 'state'}"/>
+                    <filter string="Day" name="g_day" context="{'group_by': 'booking_date:day'}"/>
+                    <filter string="Month" name="g_month" context="{'group_by': 'booking_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_line_pivot" model="ir.ui.view">
+        <field name="name">salon.booking.line.pivot</field>
+        <field name="model">salon.booking.line</field>
+        <field name="arch" type="xml">
+            <pivot string="Service Lines" sample="1">
+                <field name="booking_date" interval="month" type="row"/>
+                <field name="quantity" type="measure"/>
+                <field name="price_subtotal" type="measure"/>
+                <field name="commission_amount" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="view_salon_booking_line_graph" model="ir.ui.view">
+        <field name="name">salon.booking.line.graph</field>
+        <field name="model">salon.booking.line</field>
+        <field name="arch" type="xml">
+            <graph string="Revenue" type="bar" sample="1">
+                <field name="booking_date" interval="day"/>
+                <field name="price_subtotal" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="action_salon_booking" model="ir.actions.act_window">
+        <field name="name">Bookings</field>
+        <field name="res_model">salon.booking</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_salon_booking_search"/>
+    </record>
+    <record id="action_salon_booking_today" model="ir.actions.act_window">
+        <field name="name">Today's Bookings</field>
+        <field name="res_model">salon.booking</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_salon_booking_search"/>
+        <field name="context">{'search_default_today': 1}</field>
+    </record>
+    <record id="action_salon_check_in" model="ir.actions.act_window">
+        <field name="name">Check-In</field>
+        <field name="res_model">salon.booking</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ('confirmed', 'checked_in', 'in_service'))]</field>
+        <field name="search_view_id" ref="view_salon_booking_search"/>
+        <field name="context">{'search_default_today': 1}</field>
+    </record>
+    <record id="action_salon_calendar" model="ir.actions.act_window">
+        <field name="name">Staff Calendar</field>
+        <field name="res_model">salon.booking.line</field>
+        <field name="view_mode">calendar,list,form</field>
+        <field name="domain">[('state', '!=', 'cancelled')]</field>
+        <field name="search_view_id" ref="view_salon_booking_line_search"/>
+    </record>
+</odoo>

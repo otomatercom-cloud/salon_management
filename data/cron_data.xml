@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="cron_salon_upcoming_bookings" model="ir.cron">
+        <field name="name">Salon: remind staff of upcoming bookings</field>
+        <field name="model_id" ref="model_salon_booking"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_upcoming_bookings()</field>
+        <field name="interval_number">30</field>
+        <field name="interval_type">minutes</field>
+    </record>
+</odoo>

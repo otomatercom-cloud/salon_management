@@ -1,0 +1,21 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_booking_staff,salon.booking staff,model_salon_booking,group_salon_staff,1,1,1,0
+access_booking_manager,salon.booking manager,model_salon_booking,group_salon_manager,1,1,1,1
+access_booking_accountant,salon.booking accountant,model_salon_booking,group_salon_accountant,1,0,0,0
+access_booking_line_staff,salon.booking.line staff,model_salon_booking_line,group_salon_staff,1,1,1,1
+access_booking_line_accountant,salon.booking.line accountant,model_salon_booking_line,group_salon_accountant,1,0,0,0
+access_commission_rule_staff,salon.commission.rule staff,model_salon_commission_rule,group_salon_staff,1,0,0,0
+access_commission_rule_manager,salon.commission.rule manager,model_salon_commission_rule,group_salon_manager,1,1,1,1
+access_payout_manager,salon.staff.payout manager,model_salon_staff_payout,group_salon_manager,1,1,1,1
+access_payout_accountant,salon.staff.payout accountant,model_salon_staff_payout,group_salon_accountant,1,0,0,0
+access_expense_reception,salon.expense receptionist,model_salon_expense,group_salon_receptionist,1,1,1,0
+access_expense_manager,salon.expense manager,model_salon_expense,group_salon_manager,1,1,1,1
+access_expense_accountant,salon.expense accountant,model_salon_expense,group_salon_accountant,1,0,0,0
+access_wizard_staff,salon.booking.reason.wizard,model_salon_booking_reason_wizard,group_salon_staff,1,1,1,1
+access_daily_report_reception,salon.staff.daily.report receptionist,model_salon_staff_daily_report,group_salon_receptionist,1,0,0,0
+access_daily_report_accountant,salon.staff.daily.report accountant,model_salon_staff_daily_report,group_salon_accountant,1,0,0,0
+access_profit_report_manager,salon.profit.report manager,model_salon_profit_report,group_salon_manager,1,0,0,0
+access_profit_report_accountant,salon.profit.report accountant,model_salon_profit_report,group_salon_accountant,1,0,0,0
+access_hr_employee_salon_staff,hr.employee salon staff read,hr.model_hr_employee,group_salon_staff,1,0,0,0
+access_hr_employee_salon_accountant,hr.employee salon accountant read,hr.model_hr_employee,group_salon_accountant,1,0,0,0
+access_hr_employee_salon_manager,hr.employee salon manager,hr.model_hr_employee,group_salon_manager,1,1,1,0
