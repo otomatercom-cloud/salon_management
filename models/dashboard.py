@@ -95,6 +95,60 @@ class SalonDashboard(models.AbstractModel):
         }
 
     @api.model
+    def get_trends(self, months=6):
+        """Monthly bookings / revenue / commission / expenses for the last N months (data the user may see)."""
+        months = max(1, min(int(months or 6), 24))
+        first = fields.Date.context_today(self).replace(day=1)
+        starts, y, m = [], first.year, first.month
+        for _i in range(months):
+            starts.append(first.replace(year=y, month=m))
+            m -= 1
+            if m == 0:
+                y, m = y - 1, 12
+        starts.reverse()
+        idx = {d: i for i, d in enumerate(starts)}
+
+        def bucket(model, date_field, domain, measure):
+            out = [0.0] * months
+            try:
+                self.env[model].check_access("read")
+            except AccessError:
+                return out
+            for month_start, value in self.env[model]._read_group(
+                    domain + [(date_field, ">=", starts[0])], [f"{date_field}:month"], [measure]):
+                d = fields.Date.to_date(month_start)
+                if d in idx:
+                    out[idx[d]] = value or 0
+            return out
+
+        done = [("state", "=", "done")]
+        series = [
+            {"key": "revenue", "name": self.env._("Revenue"), "kind": "sum",
+             "values": bucket("salon.booking.line", "booking_date", done, "price_subtotal:sum")},
+            {"key": "bookings", "name": self.env._("Bookings"), "kind": "count",
+             "values": bucket("salon.booking", "booking_date", [("state", "in", list(DONE_STATES))], "__count")},
+            {"key": "commission", "name": self.env._("Commission"), "kind": "sum",
+             "values": bucket("salon.booking.line", "booking_date", done, "commission_amount:sum")},
+            {"key": "expenses", "name": self.env._("Expenses"), "kind": "sum",
+             "values": bucket("salon.expense", "date", [("state", "=", "approved")], "amount:sum")},
+        ]
+        return {"labels": [d.strftime("%b %y") for d in starts],
+                "currency": self.env.company.currency_id.symbol, "series": series}
+
+    @api.model
+    def get_staff_performance(self, date_from=False, date_to=False):
+        """Leaderboard rows per staff member for the period (visible data only)."""
+        today = fields.Date.context_today(self)
+        date_from = fields.Date.to_date(date_from) or today.replace(day=1)
+        date_to = fields.Date.to_date(date_to) or today
+        rows = self.env["salon.booking.line"]._read_group(
+            [("booking_date", ">=", date_from), ("booking_date", "<=", date_to), ("state", "=", "done"),
+             ("employee_id", "!=", False)],
+            ["employee_id"], ["__count", "price_subtotal:sum", "commission_amount:sum"])
+        return [{"name": emp.name, "services": cnt, "revenue": rev or 0.0, "commission": com or 0.0}
+                for emp, cnt, rev, com in rows]
+
+    @api.model
     def get_history(self, model, res_id):
         """Field-change history (chatter tracking) of a salon record for the external frontend.
         Plain users cannot read mail.tracking.value, so it is read with sudo after a normal read-access check."""
